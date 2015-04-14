@@ -2,15 +2,18 @@
  * Created by dmitriy on 09.04.15.
  */
 $(function(){
+
+    //Game field
     var field = {
         canvas: document.getElementById("field"),
-        width: null,
-        heigth: null
+        w: null,
+        h: null
     };
-    field.width = field.canvas.width;
-    field.height = field.canvas.height;
+    field.w = field.canvas.width;
+    field.h = field.canvas.height;
     field.context = field.canvas.getContext("2d");
 
+    //Constructors
     function Snake(){
         this.sectors = [[10, 50], [20, 50], [30, 50], [40, 50]];
         this.tail = [];
@@ -18,176 +21,152 @@ $(function(){
         this.nextPart = [];
         this.speed = 200;
         this.direction = 'right';
+        this.moveFlag = true;
+    }
+    function Rabbit(){
     }
 
+    //Proto methods
     Snake.prototype.draw = function(){
-        console.log(this.sectors);
         var i = 0, max = this.sectors.length;
         for(i; i < max; i++) {
             draw(this.sectors[i][0], this.sectors[i][1]);
         }
     };
     Snake.prototype.move = function(){
-        this.tail = this.sectors.splice(0, 1);
-        this.head[0] = +(this.sectors.slice(-1)[0][0]).toFixed(-1);
-        this.head[1] = +(this.sectors.slice(-1)[0][1]).toFixed(-1);
-        if(this.direction == 'right'){
-            field.context.clearRect(this.tail[0][0], this.tail[0][1], 9, 9);
-            if(this.head[0] < (field.width - 10)){
-                this.nextPart[0] = this.head[0] + 10;
-            } else {
-                this.head[0] = 0;
+        if(snake.moveFlag) {
+            var i = 0, max = snake.sectors.length - 1;
+            snake.tail = snake.sectors.splice(0, 1);
+            snake.head[0] = +(snake.sectors.slice(-1)[0][0]).toFixed(-1);
+            snake.head[1] = +(snake.sectors.slice(-1)[0][1]).toFixed(-1);
+            snake.nextPart = [snake.head[0], snake.head[1]];
+            if (snake.direction == 'right') {
+                if (snake.head[0] < (field.w - 10)) {
+                    snake.nextPart[0] = snake.head[0] + 10;
+                } else {
+                    snake.nextPart[0] = 0;
+                }
+                snake.sectors.push([snake.nextPart[0], snake.head[1]]);
             }
-            this.sectors.push([this.nextPart[0], this.head[1]]);
-            this.draw();
-        }
-        //if(this.direction == 'down'){
-        //    snake.clearRect(tail[0][0], tail[0][1], 9, 9);
-        //    if(last_y < (canvasHeight-10)){
-        //        next_y = last_y + 10;
-        //    } else {
-        //        next_y = 0;
-        //    }
-        //    snake_sectors.push([last_x, next_y]);
-        //    drawSnake(snake_sectors);
-        //}
-        //if(this.direction == 'left'){
-        //    snake.clearRect(tail[0][0], tail[0][1], 9, 9);
-        //    if(last_x > 0){
-        //        next_x = last_x - 10;
-        //    } else {
-        //        next_x = canvasWidth - 10;
-        //    }
-        //    snake_sectors.push([next_x, last_y]);
-        //    drawSnake(snake_sectors);
-        //}
-        //if(this.direction == 'up'){
-        //    snake.clearRect(tail[0][0], tail[0][1], 9, 9);
-        //    if(last_y > 0){
-        //        next_y = last_y - 10;
-        //    } else {
-        //        next_y = canvasHeight - 10;
-        //    }
-        //    snake_sectors.push([last_x, next_y]);
-        //    drawSnake(snake_sectors);
-        //}
-        //if(rabbitX == last_x && rabbitY == last_y){
-        //    setRabbit();
-        //    setTimeout(function(){
-        //        snake_sectors.unshift(tail);
-        //    }, (snake_sectors.length - 1) * speed);
-        //}
-        setTimeout(this.move(), this.speed);
-    };
+            if (snake.direction == 'down') {
+                if (snake.head[1] < (field.h - 10)) {
+                    snake.nextPart[1] = snake.head[1] + 10;
+                } else {
+                    snake.nextPart[1] = 0;
+                }
+                snake.sectors.push([snake.head[0], snake.nextPart[1]]);
+            }
+            if (snake.direction == 'left') {
+                if (snake.head[0] > 0) {
+                    snake.nextPart[0] = snake.head[0] - 10;
+                } else {
+                    snake.nextPart[0] = field.w - 10;
+                }
+                snake.sectors.push([snake.nextPart[0], snake.head[1]]);
+            }
+            if (snake.direction == 'up') {
+                if (snake.head[1] > 0) {
+                    snake.nextPart[1] = snake.head[1] - 10;
+                } else {
+                    snake.nextPart[1] = field.h - 10;
+                }
+                snake.sectors.push([snake.head[0], snake.nextPart[1]]);
+            }
+            if (rabbit.x == snake.head[0] && rabbit.y == snake.head[1]) {
+                snake.catchRabbit();
+            } else {
+                field.context.clearRect(snake.tail[0][0], snake.tail[0][1], 9, 9);
+            }
 
-    function Rabbit(){
-        this.x = (Math.random() * (field.width - 10)).toFixed(-1);
-        this.y = (Math.random() * (field.height - 10)).toFixed(-1);
-    }
+            //Game over
+            for (i; i < max; i++) {
+                if (snake.sectors[i][0] == snake.nextPart[0] && snake.sectors[i][1] == snake.nextPart[1]) {
+                    snake.moveFlag = false;
+                    alert("GAME OVER!!!");
+                }
+            }
+            snake.draw();
+            setTimeout(snake.move, snake.speed);
+        }
+    };
+    Snake.prototype.catchRabbit = function(){
+        field.context.clearRect(0, 0, field.w, field.h);
+        rabbit.setPosition();
+        rabbit.draw();
+        setTimeout(function(){
+            snake.sectors.unshift(snake.tail);
+        }, (snake.sectors.length - 1) * snake.speed);
+    };
     Rabbit.prototype.draw = function(){
         draw(this.x, this.y);
     };
+    Rabbit.prototype.setPosition = function(){
+        var snakeBodyFlag = false,
+        i= 0, max = snake.sectors.length;
+        this.x = (Math.random() * (field.w - 10)).toFixed(-1);
+        this.y = (Math.random() * (field.h - 10)).toFixed(-1);
 
+        // Checking appearing rabbit at snake body
+        for(i; i < max; i++){
+            if(snake.sectors[i][0] == this.x && snake.sectors[i][1] == this.y){
+                snakeBodyFlag = true;
+                this.setPosition();
+            }
+        }
+    };
+
+    //Draw function
     function draw(posX, posY){
         field.context.fillRect(posX, posY, 9, 9);
     }
+
+    //Keyboard listener
+    document.onkeydown = function(event){
+        var keyCode,
+        keyDirect;
+        if(event == null){
+            keyCode = window.event.keyCode;
+        }
+        else{
+            keyCode = event.keyCode;
+        }
+
+        switch(keyCode){
+            case 37:
+                if(keyDirect == 'right'){
+                    return;
+                }
+                keyDirect = 'left';
+                break;
+            case 38:
+                if(keyDirect == 'down'){
+                    return;
+                }
+                keyDirect = 'up';
+                break;
+            case 39:
+                if(keyDirect == 'left'){
+                    return;
+                }
+                keyDirect = 'right';
+                break;
+            case 40:
+                if(keyDirect == 'up'){
+                    return;
+                }
+                keyDirect = 'down';
+                break;
+            default:
+                break;
+        }
+        snake.direction = keyDirect;
+    }
+
+    // Inicialization
     var snake = new Snake();
-    snake.draw();
     var rabbit = new Rabbit();
+    snake.draw();
+    rabbit.setPosition();
     rabbit.draw();
     snake.move();
-
-    //function snakeMove(){
-    //    var tail = snake_sectors.splice(0, 1),
-    //    next_x, next_y;
-    //    last_x = +(snake_sectors.slice(-1)[0][0]).toFixed(-1);
-    //    last_y = +(snake_sectors.slice(-1)[0][1]).toFixed(-1);
-    //    if(direction == 'right'){
-    //        snake.clearRect(tail[0][0], tail[0][1], 9, 9);
-    //        if(last_x < (canvasWidth-10)){
-    //            next_x = last_x + 10;
-    //        } else {
-    //            next_x = 0;
-    //        }
-    //        snake_sectors.push([next_x, last_y]);
-    //        drawSnake(snake_sectors);
-    //    }
-    //    if(direction == 'down'){
-    //        snake.clearRect(tail[0][0], tail[0][1], 9, 9);
-    //        if(last_y < (canvasHeight-10)){
-    //            next_y = last_y + 10;
-    //        } else {
-    //            next_y = 0;
-    //        }
-    //        snake_sectors.push([last_x, next_y]);
-    //        drawSnake(snake_sectors);
-    //    }
-    //    if(direction == 'left'){
-    //        snake.clearRect(tail[0][0], tail[0][1], 9, 9);
-    //        if(last_x > 0){
-    //            next_x = last_x - 10;
-    //        } else {
-    //            next_x = canvasWidth - 10;
-    //        }
-    //        snake_sectors.push([next_x, last_y]);
-    //        drawSnake(snake_sectors);
-    //    }
-    //    if(direction == 'up'){
-    //        snake.clearRect(tail[0][0], tail[0][1], 9, 9);
-    //        if(last_y > 0){
-    //            next_y = last_y - 10;
-    //        } else {
-    //            next_y = canvasHeight - 10;
-    //        }
-    //        snake_sectors.push([last_x, next_y]);
-    //        drawSnake(snake_sectors);
-    //    }
-    //    if(rabbitX == last_x && rabbitY == last_y){
-    //        setRabbit();
-    //        setTimeout(function(){
-    //            snake_sectors.unshift(tail);
-    //        }, (snake_sectors.length - 1) * speed);
-    //    }
-    //    setTimeout(snakeMove, speed);
-    //}
-    //document.onkeydown = function(event){
-    //    var keyCode,
-    //    keyDirect;
-    //    if(event == null){
-    //        keyCode = window.event.keyCode;
-    //    }
-    //    else{
-    //        keyCode = event.keyCode;
-    //    }
-    //
-    //    switch(keyCode){
-    //        case 37:
-    //            if(keyDirect == 'right'){
-    //                return;
-    //            }
-    //            keyDirect = 'left';
-    //            break;
-    //        case 38:
-    //            if(keyDirect == 'down'){
-    //                return;
-    //            }
-    //            keyDirect = 'up';
-    //            break;
-    //        case 39:
-    //            if(keyDirect == 'left'){
-    //                return;
-    //            }
-    //            keyDirect = 'right';
-    //            break;
-    //        case 40:
-    //            if(keyDirect == 'up'){
-    //                return;
-    //            }
-    //            keyDirect = 'down';
-    //            break;
-    //        default:
-    //            break;
-    //    }
-    //    direction = keyDirect;
-    //}
 });
